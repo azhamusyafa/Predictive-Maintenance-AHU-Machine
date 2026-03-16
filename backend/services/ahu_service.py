@@ -6,7 +6,8 @@ from typing import Optional, Dict, Any
 from chronos import BaseChronosPipeline
 from services.db_service import test_connection, fetch_data_from_mysql
 from services.preprocessing import preprocess_raw_data
-from config import AVAILABLE_MODELS, ACTIVE_MODEL
+from config import AVAILABLE_MODELS
+import config
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'AHU_FT1.01.csv')
 MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'model', 'chronos2_ft101_finetuned')
@@ -49,7 +50,7 @@ def load_pipeline(model_type: str = None):
     global _pipeline, _current_model
     
     if model_type is None:
-        model_type = ACTIVE_MODEL
+        model_type = config.ACTIVE_MODEL
     
     if _pipeline is None or _current_model != model_type:
         model_path = AVAILABLE_MODELS.get(model_type, AVAILABLE_MODELS['finetuned'])
@@ -209,19 +210,18 @@ def get_ahu_thresholds() -> Dict[str, Any]:
     }
 
 def switch_model(model_type: str) -> Dict[str, Any]:
-    global ACTIVE_MODEL, _pipeline, _current_model
-    
+    global _pipeline, _current_model
+
     if model_type not in AVAILABLE_MODELS:
         return {
             'success': False,
             'message': f'Model type not found. Available: {list(AVAILABLE_MODELS.keys())}'
         }
-    
-    import config
+
     config.ACTIVE_MODEL = model_type
     _pipeline = None
     _current_model = None
-    
+
     return {
         'success': True,
         'active_model': model_type,
@@ -230,7 +230,7 @@ def switch_model(model_type: str) -> Dict[str, Any]:
 
 def get_active_model() -> Dict[str, Any]:
     return {
-        'active_model': ACTIVE_MODEL,
-        'model_path': AVAILABLE_MODELS[ACTIVE_MODEL],
+        'active_model': config.ACTIVE_MODEL,
+        'model_path': AVAILABLE_MODELS[config.ACTIVE_MODEL],
         'available_models': list(AVAILABLE_MODELS.keys())
     }

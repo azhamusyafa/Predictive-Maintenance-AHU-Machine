@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
-import { getStatus, getHistorical, getThresholds, getPrediction } from './services/api';
+import { getStatus, getHistorical, getThresholds, getPrediction, getActiveModel, switchModel } from './services/api';
 
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -12,6 +12,8 @@ function App() {
     const [predictionLoading, setPredictionLoading] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeModel, setActiveModel] = useState(null);
+    const [modelSwitching, setModelSwitching] = useState(false);
 
     const fetchData = async (withLoading = false) => {
         try {
@@ -44,9 +46,33 @@ function App() {
         }
     }
 
+    const fetchActiveModel = async () => {
+        try {
+            const modelData = await getActiveModel();
+            setActiveModel(modelData);
+        } catch (err) {
+            console.error('Gagal mengambil info model:', err);
+        }
+    };
+
+    const handleSwitchModel = async (modelType) => {
+        try {
+            setModelSwitching(true);
+            await switchModel(modelType);
+            await fetchActiveModel();
+            // Reset prediction supaya di-fetch ulang dengan model baru
+            setPrediction(null);
+        } catch (err) {
+            console.error('Gagal switch model:', err);
+        } finally {
+            setModelSwitching(false);
+        }
+    };
+
     useEffect(() => {
         if (!isLoggedIn) return;
         fetchData(true);
+        fetchActiveModel();
         const interval = setInterval(() => fetchData(false), 5000);
         return () => clearInterval(interval);
     }, [isLoggedIn]);
@@ -83,6 +109,9 @@ function App() {
                 prediction={prediction}
                 predictionLoading={predictionLoading}
                 fetchPrediction={fetchPrediction}
+                activeModel={activeModel}
+                modelSwitching={modelSwitching}
+                onSwitchModel={handleSwitchModel}
             />
         </div>
     );

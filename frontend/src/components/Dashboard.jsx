@@ -4,7 +4,7 @@ import HistoricalChart from './HistoricalChart';
 import PredictionChart from './PredictionChart';
 import ThresholdInfo from './ThresholdInfo';
 
-function Dashboard({ status, historical, thresholds, prediction, predictionLoading, fetchPrediction }) {
+function Dashboard({ status, historical, thresholds, prediction, predictionLoading, fetchPrediction, activeModel, modelSwitching, onSwitchModel }) {
   const [activeTab, setActiveTab] = useState('historical');
   const [predictionLoaded, setPredictionLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -15,6 +15,14 @@ function Dashboard({ status, historical, thresholds, prediction, predictionLoadi
       fetchPrediction();
       setPredictionLoaded(true);
     }
+  };
+
+  const handleSwitchModel = async (modelType) => {
+    await onSwitchModel(modelType);
+    // Reset flag supaya prediction di-fetch ulang
+    setPredictionLoaded(false);
+    fetchPrediction();
+    setPredictionLoaded(true);
   };
 
   const parameters = [
@@ -121,6 +129,39 @@ function Dashboard({ status, historical, thresholds, prediction, predictionLoadi
 
         {activeTab === 'prediction' && (
           <div key="prediction" className="tab-content">
+            <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>Model:</span>
+              {['finetuned', 'zeroshot'].map((modelType) => {
+                const isActive = activeModel?.active_model === modelType;
+                return (
+                  <button
+                    key={modelType}
+                    onClick={() => handleSwitchModel(modelType)}
+                    disabled={modelSwitching || isActive}
+                    style={{
+                      padding: '6px 16px',
+                      border: `1px solid ${isActive ? '#06b6d4' : 'rgba(6,182,212,0.2)'}`,
+                      borderRadius: 6,
+                      cursor: isActive || modelSwitching ? 'default' : 'pointer',
+                      backgroundColor: isActive ? 'rgba(6,182,212,0.15)' : 'transparent',
+                      color: isActive ? '#06b6d4' : '#94a3b8',
+                      fontSize: 12,
+                      fontWeight: isActive ? 600 : 400,
+                      transition: 'all 0.2s',
+                      opacity: modelSwitching && !isActive ? 0.5 : 1
+                    }}
+                  >
+                    {modelType === 'finetuned' ? 'Fine-tuned' : 'Zero-shot'}
+                    {isActive && <span style={{ marginLeft: 6, fontSize: 10 }}>✓ Aktif</span>}
+                  </button>
+                );
+              })}
+              {modelSwitching && (
+                <span style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic' }}>
+                  Mengganti model...
+                </span>
+              )}
+            </div>
             <PredictionChart data={prediction} thresholds={thresholds} loading={predictionLoading} />
           </div>
         )}

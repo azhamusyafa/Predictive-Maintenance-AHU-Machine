@@ -37,6 +37,16 @@ export const login = async (username, password) => {
     return response.data;
 };
 
+export const getActiveModel = async () => {
+    const response = await api.get('/ahu/model/active');
+    return response.data;
+};
+
+export const switchModel = async (modelType) => {
+    const response = await api.post('/ahu/model/switch', null, { params: { model_type: modelType } });
+    return response.data;
+};
+
 export const getHistoricalByRange = async (startDate, endDate) => {
     const params = {};
     if (startDate) params.start_date = startDate;

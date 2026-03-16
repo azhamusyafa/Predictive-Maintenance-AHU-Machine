@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
-  LineChart,
+  ComposedChart,
   Line,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -70,8 +71,9 @@ function PredictionChart({ data, thresholds, loading }) {
   const predictionData = predData?.timestamps?.map((time, index) => ({
     time: time.substring(5, 16),
     prediction: predData[selectedParam]?.values?.[index],
-    low: predData[selectedParam]?.low?.[index],
-    high: predData[selectedParam]?.high?.[index],
+    confidence: predData[selectedParam]?.low?.[index] != null && predData[selectedParam]?.high?.[index] != null
+      ? [predData[selectedParam].low[index], predData[selectedParam].high[index]]
+      : null,
     type: 'prediction'
   })) || [];
 
@@ -106,7 +108,7 @@ function PredictionChart({ data, thresholds, loading }) {
       </div>
 
       <ResponsiveContainer width="100%" height={380}>
-        <LineChart data={chartData}>
+        <ComposedChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
           <XAxis
             dataKey="time"
@@ -120,7 +122,16 @@ function PredictionChart({ data, thresholds, loading }) {
             axisLine={{ stroke: 'rgba(148,163,184,0.2)' }}
             tickLine={false}
           />
-          <Tooltip contentStyle={customTooltipStyle} />
+          <Tooltip
+            contentStyle={customTooltipStyle}
+            formatter={(value, name) => {
+              if (name === 'Confidence Interval') {
+                if (Array.isArray(value)) return [`${value[0]?.toFixed(2)} – ${value[1]?.toFixed(2)}`, name];
+                return [value, name];
+              }
+              return [typeof value === 'number' ? value.toFixed(3) : value, name];
+            }}
+          />
           <Legend wrapperStyle={{ fontSize: 12, color: '#94a3b8' }} />
           <ReferenceLine
             y={config.threshold.warning}
@@ -140,6 +151,17 @@ function PredictionChart({ data, thresholds, loading }) {
             strokeDasharray="3 3"
             label={{ value: 'Sekarang', fill: '#94a3b8', fontSize: 11 }}
           />
+          <Area
+            type="monotone"
+            dataKey="confidence"
+            name="Confidence Interval"
+            stroke="none"
+            fill="rgba(239,68,68,0.15)"
+            legendType="rect"
+            dot={false}
+            activeDot={false}
+            isAnimationActive={false}
+          />
           <Line
             type="monotone"
             dataKey="historical"
@@ -158,7 +180,7 @@ function PredictionChart({ data, thresholds, loading }) {
             strokeDasharray="5 5"
             dot={false}
           />
-        </LineChart>
+        </ComposedChart>
       </ResponsiveContainer>
 
       {data.warnings && data.warnings.length > 0 && (
