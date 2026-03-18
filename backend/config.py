@@ -25,8 +25,8 @@ DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_NAME = os.getenv('DB_NAME')
 TABLE_NAME = os.getenv('TABLE_NAME', 'ahu_ft101')
 
-DEMO_USERNAME = 'admin'
-DEMO_PASSWORD = 'admin123'
+DEMO_USERNAME = ''
+DEMO_PASSWORD = ''
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'model', 'chronos2_ft101_finetuned')
 
