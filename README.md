@@ -228,15 +228,6 @@ Tersedia dua mode:
 
 ---
 
-## Demo Credentials
-
-> Hanya untuk keperluan demonstrasi
-
-| Field    | Value     |
-|----------|-----------|
-| Username | `admin`   |
-| Password | `admin123`|
-
 ---
 
 ## Lisensi
