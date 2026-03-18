@@ -28,12 +28,16 @@ PARAM_MAP = {
 }
 
 _data_cache = None
+_data_cache_time = None
 _pipeline = None
 _current_model = None
 
+DATA_CACHE_TTL = 5  # seconds
+
 def load_data():
-    global _data_cache
-    if _data_cache is None:
+    global _data_cache, _data_cache_time
+    now = datetime.now()
+    if _data_cache is None or (now - _data_cache_time).total_seconds() >= DATA_CACHE_TTL:
         try:
             if test_connection():
                 df_raw = fetch_data_from_mysql()
@@ -44,6 +48,7 @@ def load_data():
             print(f"Using CSV fallback: {str(e)}")
             df = pd.read_csv(DATA_PATH)
             _data_cache = preprocess_raw_data(df)
+        _data_cache_time = now
     return _data_cache
 
 def load_pipeline(model_type: str = None):
